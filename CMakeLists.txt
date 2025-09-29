@@ -9,6 +9,7 @@ include_directories(include)
 
 add_executable(ArtCele
     src/main.cpp
+    src/lexer.cpp
 )
 
-target_compile_options(ArtCele PRIVATE -Wall -Wextra -Wpedantic)
+target_compile_options(ArtCele PRIVATE -Wall -Wextra -Wpedantic -Werror)
