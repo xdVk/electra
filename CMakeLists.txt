@@ -12,4 +12,14 @@ add_executable(ArtCele
     src/lexer.cpp
 )
 
-target_compile_options(ArtCele PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_options(ArtCele PRIVATE 
+    -Wall
+    -Wextra
+    -Wpedantic
+    -Werror
+    -Wconversion          # implicit narrowing conversions
+    -Wshadow              # variable shadowing
+    -Wsign-conversion     # signed/unsigned mismatches
+    -Wnull-dereference    # null pointer dereference
+    -Wunused              # unused vars/functions
+)
