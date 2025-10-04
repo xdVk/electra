@@ -13,7 +13,7 @@ IndentAccessModifiers: false
 AccessModifierOffset: -4
 AlignAfterOpenBracket: Align
 AlignConsecutiveDeclarations: true
-AlignConsecutiveAssignments: true
+AlignConsecutiveAssignments: false
 PointerAlignment: Left
 FixNamespaceComments: false
 IncludeBlocks: Regroup

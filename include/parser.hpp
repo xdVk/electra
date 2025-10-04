@@ -2,13 +2,15 @@
 
 #include "lexer.hpp"
 
+#include <iostream>
 #include <memory>
+#include <unordered_map>
 
 namespace expression {
 struct Expression {
     virtual ~Expression() = default;
 
-    virtual void print(std::ostream& os, size_t indent = 0) const = 0;
+    virtual void print(std::ostream& os, int indent = 0) const = 0;
 
     friend std::ostream& operator<<(std::ostream& os, const Expression& expr) {
         expr.print(os);
@@ -16,35 +18,58 @@ struct Expression {
     }
 };
 
-struct Literal : Expression {
+struct Primary : Expression {
     int value;
-    explicit Literal(int v) : value(v) {}
+    explicit Primary(int v) : value(v) {}
 
-    void print(std::ostream& os, size_t indent = 0) const override;
+    void print(std::ostream& os, int indent = 0) const override;
+};
+
+struct Unary : Expression {
+    Token                       op;
+    std::unique_ptr<Expression> rhs;
+    Unary(Token o, std::unique_ptr<Expression> r) : op(o), rhs(std::move(r)) {}
+
+    void print(std::ostream& os, int indent = 0) const override;
 };
 
 struct Binary : Expression {
-    std::shared_ptr<Expression> left;
+    std::unique_ptr<Expression> lhs;
+    std::unique_ptr<Expression> rhs;
     Token                       op;
-    std::shared_ptr<Expression> right;
-    Binary(std::shared_ptr<Expression> l, Token o, std::shared_ptr<Expression> r)
-        : left(l), op(o), right(r) {}
+    Binary(std::unique_ptr<Expression> l, Token o, std::unique_ptr<Expression> r)
+        : lhs(std::move(l)), rhs(std::move(r)), op(o) {}
 
-    void print(std::ostream& os, size_t indent = 0) const override;
+    void print(std::ostream& os, int indent = 0) const override;
 };
 
+struct Variable : Expression {
+    std::string name;
+    Variable(const std::string& n) : name(n) {}
+
+    void print(std::ostream& os, int indent = 0) const override;
+};
 } // namespace expression
+
+int evaluate(const expression::Expression* expr, const std::unordered_map<std::string, int>& vars);
 
 class Parser {
 public:
     explicit Parser(const std::vector<Token>& toks) : pos(0), tokens(toks) {}
 
-    std::shared_ptr<expression::Expression> parse();
+    std::unique_ptr<expression::Expression> parse();
 
+    // expression ::= equality-expression
+    // equality-expression ::= additive-expression ( ( '==' | '!=' ) additive-expression ) *
+    // additive-expression ::= multiplicative-expression ( ( '+' | '-' ) multiplicative-expression )
+    // * multiplicative-expression ::= primary ( ( '*' | '/' ) primary ) * primary ::= '('
+    // expression ')' | NUMBER | VARIABLE | '-' primary
 private:
-    std::shared_ptr<expression::Expression> parse_expression();
-    std::shared_ptr<expression::Expression> parse_term();
-    std::shared_ptr<expression::Expression> parse_factor();
+    std::unique_ptr<expression::Expression> parse_expression();
+    std::unique_ptr<expression::Expression> parse_equality_expression();
+    std::unique_ptr<expression::Expression> parse_additive_expression();
+    std::unique_ptr<expression::Expression> parse_multiplicative_expression();
+    std::unique_ptr<expression::Expression> parse_primary();
 
     [[nodiscard]] inline Token peek() const { return tokens[pos]; }
     [[nodiscard]] inline Token consume() { return tokens[pos++]; }

@@ -38,6 +38,7 @@ struct Token {
                "Token with string attached must be String or Identifier or Number");
     }
 
+    std::string          get_lexeme() const;
     friend std::ostream& operator<<(std::ostream& os, Token token);
 
     TokenType   type;
@@ -47,7 +48,7 @@ struct Token {
 class Lexer {
 public:
     explicit Lexer(std::string t) : pos(0), text(t), text_length(t.length()) {}
-    Lexer(const Lexer&)            = delete;
+    Lexer(const Lexer&) = delete;
     Lexer& operator=(const Lexer&) = delete;
 
     std::vector<Token> lex();

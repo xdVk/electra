@@ -15,10 +15,10 @@ int main(int argc, const char* argv[]) {
     if (argc > 1 && fs::exists(argv[1])) {
         file_path = argv[1];
     } else {
-        const fs::path exe_path    = argv[0];                // /ArtCele/build/ArtCele.exe/
-        const fs::path exe_dir     = exe_path.parent_path(); // /ArtCele/build/
-        const fs::path project_dir = exe_dir.parent_path();  // /ArtCele/
-        file_path                  = project_dir / "tests" / "test.cele";
+        const fs::path exe_path = argv[0];                  // /ArtCele/build/ArtCele.exe/
+        const fs::path exe_dir = exe_path.parent_path();    // /ArtCele/build/
+        const fs::path project_dir = exe_dir.parent_path(); // /ArtCele/
+        file_path = project_dir / "tests" / "test.cele";
     }
 
     if (!fs::exists(file_path)) throw std::runtime_error("File not found: " + file_path.string());
@@ -32,10 +32,13 @@ int main(int argc, const char* argv[]) {
     Lexer      lexer(source_code);
     const auto tokens = lexer.lex();
 
-    for (const Token& token : tokens) std::cout << token << '\n';
-    std::cout << '\n';
+    // for (const Token& token : tokens) std::cout << token << '\n';
+    // std::cout << '\n';
 
     Parser parser(tokens);
-    auto ast = parser.parse();
-    std::cout << *ast;
+    auto   ast = parser.parse(); // returns std::unique_ptr<Expression>
+    std::unordered_map<std::string, int> vars = {{"x", 3}, {"y", 4}};
+
+    int result = evaluate(ast.get(), vars); // pass raw pointer
+    std::cout << result << '\n';
 }
