@@ -21,20 +21,6 @@ std::ostream& operator<<(std::ostream& os, Token token) {
     return os;
 }
 
-std::string Token::get_lexeme() const {
-    switch (type) {
-    case TokenType::Plus: return "+";
-    case TokenType::Minus: return "-";
-    case TokenType::Star: return "*";
-    case TokenType::Slash: return "/";
-    case TokenType::LParen: return "(";
-    case TokenType::RParen: return ")";
-    case TokenType::Number:
-    case TokenType::Identifier: return value;
-    default: throw std::runtime_error("Unknown token type");
-    }
-}
-
 void Lexer::lex_space() {
     while (isspace(peek())) next();
 }

@@ -38,7 +38,6 @@ struct Token {
                "Token with string attached must be String or Identifier or Number");
     }
 
-    std::string          get_lexeme() const;
     friend std::ostream& operator<<(std::ostream& os, Token token);
 
     TokenType   type;
