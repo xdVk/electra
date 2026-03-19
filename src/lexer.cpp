@@ -11,6 +11,24 @@
 namespace electra {
 using enum TokenKind;
 
+[[nodiscard]] char Lexer::peek(size_t offset) const noexcept {
+    return (current + offset < end) ? *(current + offset) : '\0';
+}
+
+void Lexer::next(size_t offset) {
+    assert(current + offset <= end && "Lexer advanced past end of input.");
+
+    for (size_t i = 0; i < offset; i++) {
+        if (peek() == '\n') {
+            line++;
+            column = 1;
+        } else {
+            column++;
+        }
+        current++;
+    }
+}
+
 std::ostream& operator<<(std::ostream& os, TokenKind kind) {
     switch (kind) {
 #define X(name)                                                                                    \
@@ -23,13 +41,16 @@ std::ostream& operator<<(std::ostream& os, TokenKind kind) {
 }
 
 std::ostream& operator<<(std::ostream& os, const Token& token) {
-    os << token.kind;
     if (token.kind == Number) {
-        os << '(' << token.num_value << ')';
-    } else if (token.kind == String || token.kind == Identifier) {
-        os << '(' << token.str_value << ')';
+        os << token.num_value;
+    } else if (token.kind == Identifier) {
+        os << token.str_value;
+    } else if (token.kind == String) {
+        os << '"' << token.str_value << '"';
+    } else {
+        os << token.kind;
     }
-    os << " at " << token.line << ':' << token.column;
+    if (token.line != 0 || token.column != 0) { os << " at " << token.line << ':' << token.column; }
     return os;
 }
 
@@ -37,16 +58,16 @@ std::vector<Token> Lexer::lex() {
     std::vector<Token> tokens;
 
     do {
-        while (std::isspace(peek())) {
+        while (std::isspace(peek()) != 0) {
             next();
         }
 
-        if (std::isdigit(peek())) {
+        if (std::isdigit(peek()) != 0) {
             tokens.emplace_back(lex_number());
             continue;
         }
 
-        if (std::isalpha(peek()) || peek() == '_') {
+        if (std::isalpha(peek()) != 0 || peek() == '_') {
             tokens.emplace_back(lex_identifier());
             continue;
         }
@@ -76,8 +97,9 @@ std::vector<Token> Lexer::lex() {
             break;
         case '/':
             if (peek(1) == '/') {
-                while (peek() != '\n' && peek() != '\0')
+                while (peek() != '\n' && peek() != '\0') {
                     next();
+                }
             } else {
                 tokens.emplace_back(Slash, line, column);
                 next();
@@ -161,7 +183,7 @@ std::vector<Token> Lexer::lex() {
         }
     } while (peek() != '\0');
 
-    tokens.emplace_back(Token(EndOfFile, line, column));
+    tokens.emplace_back(EndOfFile, line, column);
     return tokens;
 }
 
@@ -170,28 +192,28 @@ Token Lexer::lex_number() {
     const size_t lin = line;
     const size_t col = column;
     const char* num_begin = current;
-    while (std::isdigit(peek())) {
+    while (std::isdigit(peek()) != 0) {
         next();
     }
 
     const char* num_end = current;
     const long long value = std::stoll(std::string(num_begin, num_end));
-    return Token(Number, lin, col, value);
+    return {Number, lin, col, value};
 }
 
 static TokenKind keyword_or_identifier(const std::string& word) {
-    if (word == "fn") return Fn;
-    if (word == "return") return Return;
-    if (word == "let") return Let;
-    if (word == "if") return If;
-    if (word == "else") return Else;
-    if (word == "true") return True;
-    if (word == "false") return False;
-    if (word == "i32") return I32;
-    if (word == "i64") return I64;
-    if (word == "f32") return F32;
-    if (word == "f64") return F64;
-    if (word == "bool") return Bool;
+    if (word == "fn") { return Fn; }
+    if (word == "return") { return Return; }
+    if (word == "let") { return Let; }
+    if (word == "if") { return If; }
+    if (word == "else") { return Else; }
+    if (word == "true") { return True; }
+    if (word == "false") { return False; }
+    if (word == "i32") { return I32; }
+    if (word == "i64") { return I64; }
+    if (word == "f32") { return F32; }
+    if (word == "f64") { return F64; }
+    if (word == "bool") { return Bool; }
     return Identifier;
 }
 
@@ -202,14 +224,14 @@ Token Lexer::lex_identifier() {
     const size_t col = column;
     const char* iden_begin = current;
     next();
-    while (std::isalnum(peek()) || peek() == '_') {
+    while (std::isalnum(peek()) != 0 || peek() == '_') {
         next();
     }
 
     const char* iden_end = current;
     const std::string value(iden_begin, iden_end);
     const TokenKind kind = keyword_or_identifier(value);
-    return Token(kind, lin, col, kind == Identifier ? value : std::string {});
+    return {kind, lin, col, kind == Identifier ? value : std::string {}};
 }
 
 Token Lexer::lex_string() {
@@ -221,11 +243,12 @@ Token Lexer::lex_string() {
     while (peek() != '"' && peek() != '\0') {
         next();
     }
-    if (peek() == '\0')
+    if (peek() == '\0') {
         throw std::runtime_error(std::format("Unterminated string at {}:{}", lin, col));
+    }
     const std::string value(str_begin, current);
     next(); // skip trailing '"'
-    return Token(String, lin, col, value);
+    return {String, lin, col, value};
 }
 
 } // namespace electra

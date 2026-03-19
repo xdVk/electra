@@ -2,7 +2,9 @@
 
 #include <cassert>
 #include <cstdint>
+#include <format>
 #include <ostream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -55,12 +57,14 @@ enum struct TokenKind : uint8_t {
 #undef X
 };
 
+std::ostream& operator<<(std::ostream& os, TokenKind kind);
+
 struct Token {
     Token() = delete;
-    Token(TokenKind kind, size_t line, size_t column, const std::string& value = "")
-        : kind(kind), line(line), column(column), str_value(value), num_value(0) {}
+    Token(TokenKind kind, size_t line, size_t column, std::string value = "")
+        : kind(kind), line(line), column(column), str_value(std::move(value)), num_value(0) {}
     Token(TokenKind kind, size_t line, size_t column, long long value)
-        : kind(kind), line(line), column(column), str_value(""), num_value(value) {}
+        : kind(kind), line(line), column(column), num_value(value) {}
     TokenKind kind;
     size_t line;
     size_t column;
@@ -76,27 +80,16 @@ class Lexer {
 
     Lexer(const Lexer&) = delete;
     Lexer& operator=(const Lexer&) = delete;
+    Lexer(Lexer&&) = default;
+    Lexer& operator=(Lexer&&) = default;
+    ~Lexer() = default;
 
     std::vector<Token> lex();
 
   private:
-    [[nodiscard]] inline char peek(size_t offset = 0) const noexcept {
-        return (current + offset < end) ? *(current + offset) : '\0';
-    }
+    [[nodiscard]] inline char peek(size_t offset = 0) const noexcept;
 
-    inline void next(size_t n = 1) {
-        assert(current + n <= end && "Lexer advanced past end of input.");
-
-        for (size_t i = 0; i < n; i++) {
-            if (peek() == '\n') {
-                line++;
-                column = 1;
-            } else {
-                column++;
-            }
-            current++;
-        }
-    }
+    inline void next(size_t offset = 1);
 
     Token lex_number();
     Token lex_string();
@@ -111,3 +104,11 @@ class Lexer {
 };
 
 } // namespace electra
+
+template <> struct std::formatter<electra::Token> : std::formatter<std::string> {
+    auto format(const electra::Token& token, std::format_context& ctx) const {
+        std::ostringstream os;
+        os << token;
+        return std::formatter<std::string>::format(os.str(), ctx);
+    }
+};
