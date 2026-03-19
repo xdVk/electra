@@ -36,6 +36,7 @@ using enum TokenKind;
 // primary = NUMBER
 //         | IDENTIFIER ('(' args ')')?
 //         | '(' expression ')'
+
 // args    = (expression (',' expression)*)?
 
 Program Parser::parse() {

@@ -36,6 +36,7 @@ namespace electra {
 // primary = NUMBER
 //         | IDENTIFIER ('(' args ')')?
 //         | '(' expression ')'
+
 // args    = (expression (',' expression)*)?
 
 struct Expression {
@@ -45,7 +46,7 @@ struct Expression {
     Expression& operator=(const Expression&) = delete;
     Expression(Expression&&) = delete;
     Expression& operator=(Expression&&) = delete;
-    virtual void print(size_t indent = 0) const = 0;
+    virtual void print(const std::string& prefix = "", bool is_last = true) const = 0;
 };
 
 struct Statement {
@@ -55,112 +56,100 @@ struct Statement {
     Statement& operator=(const Statement&) = delete;
     Statement(Statement&&) = delete;
     Statement& operator=(Statement&&) = delete;
-    virtual void print(size_t indent = 0) const = 0;
+    virtual void print(const std::string& prefix = "", bool is_last = true) const = 0;
 };
 
 struct NumberExpression : Expression {
     explicit NumberExpression(Token token) : token(std::move(token)) {}
-
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << token << "\n";
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << token << "\n";
     }
-
     Token token;
 };
 
 struct IdentifierExpression : Expression {
     explicit IdentifierExpression(Token token) : token(std::move(token)) {}
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << token << "\n";
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << token << "\n";
     }
-
     Token token;
 };
 
 struct UnaryExpression : Expression {
     explicit UnaryExpression(Token operation, std::unique_ptr<Expression> right)
         : operation(std::move(operation)), right(std::move(right)) {}
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << "UnaryExpr(" << operation << ")\n";
+        right->print(prefix + (is_last ? "   " : "│  "), true);
+    }
     Token operation;
     std::unique_ptr<Expression> right;
-
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "UnaryExpr(" << operation << ")\n";
-        right->print(indent + 2);
-    }
 };
 
 struct BinaryExpression : Expression {
     explicit BinaryExpression(std::unique_ptr<Expression> left, Token operation,
                               std::unique_ptr<Expression> right)
         : left(std::move(left)), operation(std::move(operation)), right(std::move(right)) {};
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << "BinaryExpr(" << operation << ")\n";
+        left->print(prefix + (is_last ? "   " : "│  "), false);
+        right->print(prefix + (is_last ? "   " : "│  "), true);
+    }
     std::unique_ptr<Expression> left;
     Token operation;
     std::unique_ptr<Expression> right;
-
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "BinaryExpr(" << operation << ")\n";
-        left->print(indent + 2);
-        right->print(indent + 2);
-    }
 };
 
 struct CallExpression : Expression {
-    Token name;
-    std::vector<std::unique_ptr<Expression>> args;
-
     CallExpression(Token name, std::vector<std::unique_ptr<Expression>> args)
         : name(std::move(name)), args(std::move(args)) {}
-
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "CallExpr(" << name << ")\n";
-        for (const auto& arg : args) {
-            arg->print(indent + 2);
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << "CallExpr(" << name << ")\n";
+        for (size_t i = 0; i < args.size(); i++) {
+            args[i]->print(prefix + (is_last ? "   " : "│  "), i == args.size() - 1);
         }
     }
+    Token name;
+    std::vector<std::unique_ptr<Expression>> args;
 };
 
 struct ExpressionStatement : Statement {
-    std::unique_ptr<Expression> expression;
     explicit ExpressionStatement(std::unique_ptr<Expression> expression)
         : expression(std::move(expression)) {}
-    void print(size_t indent = 0) const override {
-        expression->print(indent);
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        expression->print(prefix, is_last);
     }
+    std::unique_ptr<Expression> expression;
 };
 
 struct LetStatement : Statement {
     explicit LetStatement(Token name, std::unique_ptr<Expression> expression)
         : identifier(std::move(name)), expression(std::move(expression)) {}
-
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "LetStatement(" << identifier << ")\n";
-        expression->print(indent + 2);
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << "LetStatement(" << identifier << ")\n";
+        expression->print(prefix + (is_last ? "   " : "│  "), true);
     }
-
     Token identifier;
     std::unique_ptr<Expression> expression;
 };
 
 struct ReturnStatement : Statement {
-    std::unique_ptr<Expression> expression;
     explicit ReturnStatement(std::unique_ptr<Expression> expression)
         : expression(std::move(expression)) {}
-
-    void print(size_t indent = 0) const override {
-        std::cout << std::string(indent, ' ') << "ReturnStatement\n";
-        expression->print(indent + 2);
+    void print(const std::string& prefix = "", bool is_last = true) const override {
+        std::cout << prefix << (is_last ? "└─ " : "├─ ") << "ReturnStatement\n";
+        expression->print(prefix + (is_last ? "   " : "│  "), true);
     }
+    std::unique_ptr<Expression> expression;
 };
 
 struct Block {
-    Block() = default;
-    std::vector<std::unique_ptr<Statement>> statements;
-
-    void print(size_t indent = 0) const {
-        for (const auto& statement : statements) {
-            statement->print(indent + 2);
+    void print(const std::string& prefix = "") const {
+        for (size_t i = 0; i < statements.size(); i++) {
+            statements[i]->print(prefix, i == statements.size() - 1);
         }
     }
+    std::vector<std::unique_ptr<Statement>> statements;
 };
 
 struct Parameter {
@@ -173,32 +162,29 @@ struct Function {
     Function(Token name, std::vector<Parameter> params, Token return_type, Block body)
         : name(std::move(name)), params(std::move(params)), return_type(std::move(return_type)),
           body(std::move(body)) {}
+    void print(const std::string& prefix = "") const {
+        std::cout << prefix << "Function(" << name << ") -> " << return_type << "\n";
+        std::string child_prefix = prefix + "   ";
+        for (size_t i = 0; i < params.size(); i++) {
+            bool last = i == params.size() - 1 && body.statements.empty();
+            std::cout << child_prefix << (last ? "└─ " : "├─ ") << "Param(" << params[i].name
+                      << " : " << params[i].type << ")\n";
+        }
+        body.print(child_prefix);
+    }
     Token name;
     std::vector<Parameter> params;
     Token return_type;
     Block body;
-
-    void print(size_t indent = 0) const {
-        std::cout << std::string(indent, ' ') << "Function(" << name << ") -> " << return_type
-                  << "\n";
-
-        for (const auto& [pname, ptype] : params) {
-            std::cout << std::string(indent + 2, ' ') << "Param(" << pname << " : " << ptype
-                      << ")\n";
-        }
-
-        body.print(indent);
-    }
 };
 
 struct Program {
-    std::vector<Function> functions;
-
     void print() const {
         for (const auto& function : functions) {
             function.print();
         }
     }
+    std::vector<Function> functions;
 };
 
 class Parser {
