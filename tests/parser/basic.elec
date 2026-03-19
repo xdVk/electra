@@ -1,0 +1,29 @@
+fn add(a: i32, b: i32) -> i32 {
+    return a + b;
+}
+
+fn multiply(a: i32, b: i32) -> i32 {
+    let result = a * b;
+    return result;
+}
+
+fn complex(a: i64, b: f32, c: bool) -> i64 {
+    let x = a + 1;
+    let y = x * 2;
+    let z = (a + b) * (x - y);
+    return z;
+}
+
+fn unary(a: i32) -> i32 {
+    return -a;
+}
+
+fn calls(a: i32) -> i32 {
+    let x = add(a, 1);
+    let y = multiply(x, add(2, 3));
+    return y;
+}
+
+fn precedence(a: i32) -> i32 {
+    return a + 2 * 3;
+}

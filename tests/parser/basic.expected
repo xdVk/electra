@@ -1,0 +1,65 @@
+Function(add at 1:4) -> I32 at 1:27
+   ├─ Param(a at 1:8 : I32 at 1:11)
+   ├─ Param(b at 1:16 : I32 at 1:19)
+   └─ ReturnStatement
+      └─ BinaryExpr(Plus at 2:14)
+         ├─ a at 2:12
+         └─ b at 2:16
+Function(multiply at 5:4) -> I32 at 5:32
+   ├─ Param(a at 5:13 : I32 at 5:16)
+   ├─ Param(b at 5:21 : I32 at 5:24)
+   ├─ LetStatement(result at 6:9)
+   │  └─ BinaryExpr(Star at 6:20)
+   │     ├─ a at 6:18
+   │     └─ b at 6:22
+   └─ ReturnStatement
+      └─ result at 7:12
+Function(complex at 10:4) -> I64 at 10:40
+   ├─ Param(a at 10:12 : I64 at 10:15)
+   ├─ Param(b at 10:20 : F32 at 10:23)
+   ├─ Param(c at 10:28 : Bool at 10:31)
+   ├─ LetStatement(x at 11:9)
+   │  └─ BinaryExpr(Plus at 11:15)
+   │     ├─ a at 11:13
+   │     └─ 1 at 11:17
+   ├─ LetStatement(y at 12:9)
+   │  └─ BinaryExpr(Star at 12:15)
+   │     ├─ x at 12:13
+   │     └─ 2 at 12:17
+   ├─ LetStatement(z at 13:9)
+   │  └─ BinaryExpr(Star at 13:21)
+   │     ├─ BinaryExpr(Plus at 13:16)
+   │     │  ├─ a at 13:14
+   │     │  └─ b at 13:18
+   │     └─ BinaryExpr(Minus at 13:26)
+   │        ├─ x at 13:24
+   │        └─ y at 13:28
+   └─ ReturnStatement
+      └─ z at 14:12
+Function(unary at 17:4) -> I32 at 17:21
+   ├─ Param(a at 17:10 : I32 at 17:13)
+   └─ ReturnStatement
+      └─ UnaryExpr(Minus at 18:12)
+         └─ a at 18:13
+Function(calls at 21:4) -> I32 at 21:21
+   ├─ Param(a at 21:10 : I32 at 21:13)
+   ├─ LetStatement(x at 22:9)
+   │  └─ CallExpr(add at 22:13)
+   │     ├─ a at 22:17
+   │     └─ 1 at 22:20
+   ├─ LetStatement(y at 23:9)
+   │  └─ CallExpr(multiply at 23:13)
+   │     ├─ x at 23:22
+   │     └─ CallExpr(add at 23:25)
+   │        ├─ 2 at 23:29
+   │        └─ 3 at 23:32
+   └─ ReturnStatement
+      └─ y at 24:12
+Function(precedence at 27:4) -> I32 at 27:26
+   ├─ Param(a at 27:15 : I32 at 27:18)
+   └─ ReturnStatement
+      └─ BinaryExpr(Plus at 28:14)
+         ├─ a at 28:12
+         └─ BinaryExpr(Star at 28:18)
+            ├─ 2 at 28:16
+            └─ 3 at 28:20
