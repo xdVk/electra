@@ -5,6 +5,14 @@ Checks: >
   modernize-*,
   performance-*,
   readability-*,
+  bugprone-*,
   -modernize-use-trailing-return-type,
   -readability-magic-numbers,
-  -cppcoreguidelines-avoid-magic-numbers
+  -cppcoreguidelines-avoid-magic-numbers,
+  -cppcoreguidelines-macro-usage,
+  -cppcoreguidelines-pro-bounds-pointer-arithmetic,
+  -cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -performance-avoid-endl,
+  -readability-identifier-length,
+  -cppcoreguidelines-avoid-do-while,
+  -HeaderFilterRegex: ".*(src|include)/.*"
